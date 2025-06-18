@@ -1,0 +1,799 @@
+	
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Review Detective - Team Game</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+	<style>
+	body {
+	font-family: 'Poppins', sans-serif;
+	background-color: #f2f2f2;
+	}
+	.review-card {
+	transition: all 0.3s ease;
+	height: 100%;
+	}
+	.review-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+	}
+	.btn-choice {
+	transition: all 0.2s ease;
+	}
+	.btn-choice:hover {
+	transform: translateY(-2px);
+	}
+	.btn-choice.selected {
+	transform: translateY(0);
+	}
+	.btn-trustworthy.selected {
+	background-color: #34e0a1;
+	color: white;
+	}
+	.btn-not-trustworthy.selected {
+	background-color: #ff5d5d;
+	color: white;
+	}
+	.timer-bar {
+	transition: width 1s linear;
+	}
+	.confetti {
+	position: absolute;
+	width: 10px;
+	height: 10px;
+	opacity: 0;
+	animation: confetti-fall 3s ease-in-out forwards;
+	}
+	@keyframes confetti-fall {
+	0% {
+	transform: translateY(-50px) rotate(0deg);
+	opacity: 1;
+	}
+	100% {
+	transform: translateY(100vh) rotate(720deg);
+	opacity: 0;
+	}
+	}
+	/* TripAdvisor Colors */
+	.ta-green {
+	background-color: #00aa6c;
+	}
+	.ta-green-text {
+	color: #00aa6c;
+	}
+	.ta-green-border {
+	border-color: #00aa6c;
+	}
+	.ta-green-hover:hover {
+	background-color: #008f5b;
+	}
+	.ta-dark {
+	background-color: #2c2c2c;
+	}
+	.ta-dark-text {
+	color: #2c2c2c;
+	}
+	.ta-light-bg {
+	background-color: #f2f2f2;
+	}
+	.ta-bubble {
+	background-color: #00aa6c;
+	border-radius: 50%;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-weight: bold;
+	}
+	</style>
+	</head>
+	<body>
+	<div class="min-h-screen flex flex-col">
+	<!-- Header -->
+	<header class="ta-dark text-white py-4 px-6 shadow-lg">
+	<div class="container mx-auto flex justify-between items-center">
+	<h1 class="text-2xl md:text-3xl font-bold flex items-center">
+	<span class="mr-2">🕵️‍♀️</span> Review Detective
+	</h1>
+	<div class="flex items-center space-x-4">
+	<button id="instructionsBtn" class="ta-green hover:ta-green-hover text-white px-4 py-2 rounded-lg transition">
+	Instructions
+	</button>
+	<button id="resetBtn" class="bg-gray-600 hover:bg-gray-800 text-white px-4 py-2 rounded-lg transition">
+	Reset Game
+	</button>
+	</div>
+	</div>
+	</header>
+	
+	<!-- Main Content -->
+	<main class="flex-grow container mx-auto px-4 py-8">
+	<!-- Game Setup Screen -->
+	<div id="setupScreen" class="bg-white rounded-xl shadow-lg p-8 max-w-3xl mx-auto">
+	<h2 class="text-2xl font-bold text-center mb-6 ta-green-text">Team Setup</h2>
+	<div class="mb-6">
+	<label class="block text-gray-700 font-medium mb-2">Number of Teams</label>
+	<div class="flex space-x-4">
+	<button class="team-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium" data-teams="2">2 Teams</button>
+	<button class="team-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium" data-teams="3">3 Teams</button>
+	<button class="team-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium" data-teams="4">4 Teams</button>
+	</div>
+	</div>
+	
+	<div class="mb-6">
+	<label class="block text-gray-700 font-medium mb-2">Time per Review</label>
+	<div class="flex space-x-4">
+	<button class="time-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium" data-time="60">1 Minute</button>
+	<button class="time-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium" data-time="120">2 Minutes</button>
+	<button class="time-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium" data-time="180">3 Minutes</button>
+	</div>
+	</div>
+	
+	<div id="teamNamesContainer" class="mb-6 hidden">
+	<label class="block text-gray-700 font-medium mb-2">Team Names</label>
+	<div id="teamInputs" class="space-y-3">
+	<!-- Team inputs will be added here -->
+	</div>
+	</div>
+	
+	<div class="text-center">
+	<button id="startGameBtn" class="ta-green hover:ta-green-hover text-white px-6 py-3 rounded-lg text-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+	Start Game
+	</button>
+	</div>
+	</div>
+	
+	<!-- Game Screen (hidden initially) -->
+	<div id="gameScreen" class="hidden">
+	<div class="mb-6 flex justify-between items-center">
+	<div class="text-xl font-bold ta-green-text">
+	Review <span id="currentReviewNum">1</span> of <span id="totalReviews">6</span>
+	</div>
+	<div class="flex items-center">
+	<div class="mr-3 font-medium">Time remaining:</div>
+	<div class="w-64 h-6 bg-gray-200 rounded-full overflow-hidden">
+	<div id="timerBar" class="timer-bar h-full ta-green rounded-full" style="width: 100%"></div>
+	</div>
+	<div id="timerDisplay" class="ml-3 font-medium">2:00</div>
+	</div>
+	</div>
+	
+	<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+	<!-- Review Card -->
+	<div class="md:col-span-2">
+	<div class="bg-white rounded-xl shadow-lg p-6 h-full">
+	<div class="flex items-center mb-4">
+	<div class="ta-bubble">
+	<span id="reviewIcon">👤</span>
+	</div>
+	<div class="ml-4">
+	<h3 class="font-medium text-gray-900">Anonymous Reviewer</h3>
+	<div class="flex items-center">
+	<div id="reviewStars" class="text-yellow-400">★★★★★</div>
+	</div>
+	</div>
+	</div>
+	<p id="reviewText" class="text-gray-700 text-lg leading-relaxed">
+	"Absolutely loved this place! Food was great, staff were amazing, and the view from our table was unforgettable. Will definitely come back next summer."
+	</p>
+	</div>
+	</div>
+	
+	<!-- Team Actions -->
+	<div>
+	<div class="bg-white rounded-xl shadow-lg p-6">
+	<h3 class="font-bold text-lg mb-4 text-center ta-green-text">
+	<span id="currentTeamName">Team 1</span>'s Turn
+	</h3>
+	
+	<p class="text-gray-600 mb-4 text-center">Is this review trustworthy?</p>
+	
+	<div class="flex flex-col space-y-3 mb-6">
+	<button class="btn-choice btn-trustworthy border-2 border-green-500 text-green-600 hover:bg-green-50 font-medium py-3 px-4 rounded-lg flex items-center justify-center">
+	<span class="mr-2">✅</span> Trustworthy
+	</button>
+	<button class="btn-choice btn-not-trustworthy border-2 border-red-500 text-red-600 hover:bg-red-50 font-medium py-3 px-4 rounded-lg flex items-center justify-center">
+	<span class="mr-2">❌</span> Not Trustworthy
+	</button>
+	</div>
+	
+	<div class="mb-4">
+	<label class="block text-gray-700 font-medium mb-2">Reasoning:</label>
+	<textarea id="reasoningInput" class="w-full border-2 border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" rows="3" placeholder="Why do you think this?"></textarea>
+	</div>
+	
+	<button id="submitBtn" class="w-full ta-green hover:ta-green-hover text-white py-3 rounded-lg font-medium transition">
+	Submit Answer
+	</button>
+	</div>
+	</div>
+	</div>
+	</div>
+	
+	<!-- Results Screen (hidden initially) -->
+	<div id="resultsScreen" class="hidden">
+	<div class="bg-white rounded-xl shadow-lg p-8 max-w-4xl mx-auto">
+	<h2 class="text-2xl font-bold text-center mb-6 ta-green-text">Final Results</h2>
+	
+	<div id="confettiContainer"></div>
+	
+	<div id="winnerAnnouncement" class="bg-green-50 border-l-4 ta-green-border text-green-700 p-4 mb-6 rounded-lg hidden">
+	<p class="font-bold">🏆 <span id="winnerName"></span> wins!</p>
+	<p>Congratulations on your excellent review detection skills!</p>
+	</div>
+	
+	<div class="overflow-x-auto">
+	<table class="min-w-full bg-white">
+	<thead>
+	<tr>
+	<th class="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+	<th class="py-3 px-4 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+	<th class="py-3 px-4 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Correct</th>
+	<th class="py-3 px-4 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Incorrect</th>
+	</tr>
+	</thead>
+	<tbody id="resultsTableBody">
+	<!-- Results will be populated here -->
+	</tbody>
+	</table>
+	</div>
+	
+	<div class="mt-8">
+	<h3 class="text-xl font-bold mb-4 ta-green-text">Review Answer Key</h3>
+	<div class="space-y-4" id="answerKeyContainer">
+	<!-- Answer key will be populated here -->
+	</div>
+	</div>
+	
+	<div class="mt-8 text-center">
+	<button id="playAgainBtn" class="ta-green hover:ta-green-hover text-white px-6 py-3 rounded-lg text-lg font-medium transition">
+	Play Again
+	</button>
+	</div>
+	</div>
+	</div>
+	</main>
+	
+	<!-- Instructions Modal (hidden initially) -->
+	<div id="instructionsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+	<div class="bg-white rounded-xl shadow-2xl p-8 max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+	<div class="flex justify-between items-center mb-6">
+	<h2 class="text-2xl font-bold ta-green-text">How to Play Review Detective</h2>
+	<button id="closeInstructionsBtn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+	</div>
+	
+	<div class="space-y-4 text-gray-700">
+	<div>
+	<h3 class="font-bold text-lg ta-green-text mb-2">Game Overview</h3>
+	<p>Review Detective is a team game where players analyze reviews to determine if they're trustworthy or not.</p>
+	</div>
+	
+	<div>
+	<h3 class="font-bold text-lg ta-green-text mb-2">How It Works</h3>
+	<ul class="list-disc pl-5 space-y-2">
+	<li>Teams will be shown 6 different reviews, one at a time.</li>
+	<li>For each review, the current team must decide if it's "Trustworthy" or "Not Trustworthy".</li>
+	<li>Teams must provide reasoning for their decision.</li>
+	<li>Each team has a limited time to make their decision.</li>
+	<li>Teams earn points for correct answers and good reasoning.</li>
+	</ul>
+	</div>
+	
+	<div>
+	<h3 class="font-bold text-lg ta-green-text mb-2">Scoring</h3>
+	<ul class="list-disc pl-5 space-y-2">
+	<li><strong>2 points</strong> for a correct trustworthiness assessment</li>
+	<li><strong>1 point</strong> for providing good reasoning</li>
+	<li><strong>0 points</strong> for incorrect assessments</li>
+	</ul>
+	</div>
+	
+	<div>
+	<h3 class="font-bold text-lg ta-green-text mb-2">Learning Outcome</h3>
+	<p>This game helps develop judgment and sharpen eyes for subtle manipulation, vague language, or over-detailing in reviews.</p>
+	</div>
+	</div>
+	
+	<div class="mt-8 text-center">
+	<button id="gotItBtn" class="ta-green hover:ta-green-hover text-white px-6 py-2 rounded-lg font-medium transition">
+	Got it!
+	</button>
+	</div>
+	</div>
+	</div>
+	
+	<!-- Feedback Modal (hidden initially) -->
+	<div id="feedbackModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+	<div class="bg-white rounded-xl shadow-2xl p-8 max-w-md mx-4">
+	<div id="feedbackContent" class="text-center">
+	<!-- Feedback content will be populated here -->
+	</div>
+	
+	<div class="mt-6 text-center">
+	<button id="nextReviewBtn" class="ta-green hover:ta-green-hover text-white px-6 py-2 rounded-lg font-medium transition">
+	Next Review
+	</button>
+	</div>
+	</div>
+	</div>
+	</div>
+	
+	<script>
+	// Game data
+	const reviews = [
+	{
+	text: "Absolutely loved this place! Food was great, staff were amazing, and the view from our table was unforgettable. Will definitely come back next summer.",
+	stars: 5,
+	icon: "🍽️",
+	isTrustworthy: true,
+	reasoning: "Descriptive, personal experience, emotional tone, no exaggeration or policy violations."
+	},
+	{
+	text: "The owner paid us to leave a good review. Honestly, we didn't even eat here. Just doing them a favor.",
+	stars: 5,
+	icon: "💰",
+	isTrustworthy: false,
+	reasoning: "Review manipulation – violates platform policy by admitting it's a fake review."
+	},
+	{
+	text: "This business should be shut down. They're scammers. If you go here, you'll regret it. Trust me.",
+	stars: 1,
+	icon: "😡",
+	isTrustworthy: false,
+	reasoning: "Inflammatory & vague – lacks specific experience, uses harsh/accusatory language."
+	},
+	{
+	text: "The best massage I've ever had! The staff was so professional and kind. They even gave us a free meal after. Ask for Linda—she's the best!",
+	stars: 5,
+	icon: "💆",
+	isTrustworthy: false,
+	reasoning: "Mentions specific staff by name (which may breach privacy), possible compensation (\"free meal\"), and promotional tone."
+	},
+	{
+	text: "Terrible service. Waited 40 minutes for food, and it was cold when it arrived. Staff seemed overworked and disorganized. Hope they improve.",
+	stars: 2,
+	icon: "⏱️",
+	isTrustworthy: true,
+	reasoning: "Honest, critical feedback with clear timeline and experience. Constructive in tone."
+	},
+	{
+	text: "I haven't visited this hotel yet, but I'm sure it'll be great. The photos look awesome and my cousin loved it!",
+	stars: 5,
+	icon: "🏨",
+	isTrustworthy: false,
+	reasoning: "No actual experience – speculative review based on assumption/others' opinions. Violates review authenticity guidelines."
+	}
+	];
+	
+	// Game state
+	let gameState = {
+	teams: [],
+	currentReviewIndex: 0,
+	currentTeamIndex: 0,
+	timePerReview: 120, // Default 2 minutes
+	timer: null,
+	timeRemaining: 0,
+	selectedChoice: null
+	};
+	
+	// DOM Elements
+	const setupScreen = document.getElementById('setupScreen');
+	const gameScreen = document.getElementById('gameScreen');
+	const resultsScreen = document.getElementById('resultsScreen');
+	const instructionsModal = document.getElementById('instructionsModal');
+	const feedbackModal = document.getElementById('feedbackModal');
+	
+	// Setup screen elements
+	const teamBtns = document.querySelectorAll('.team-btn');
+	const timeBtns = document.querySelectorAll('.time-btn');
+	const teamNamesContainer = document.getElementById('teamNamesContainer');
+	const teamInputs = document.getElementById('teamInputs');
+	const startGameBtn = document.getElementById('startGameBtn');
+	
+	// Game screen elements
+	const currentReviewNum = document.getElementById('currentReviewNum');
+	const totalReviews = document.getElementById('totalReviews');
+	const timerBar = document.getElementById('timerBar');
+	const timerDisplay = document.getElementById('timerDisplay');
+	const reviewText = document.getElementById('reviewText');
+	const reviewStars = document.getElementById('reviewStars');
+	const reviewIcon = document.getElementById('reviewIcon');
+	const currentTeamName = document.getElementById('currentTeamName');
+	const choiceButtons = document.querySelectorAll('.btn-choice');
+	const reasoningInput = document.getElementById('reasoningInput');
+	const submitBtn = document.getElementById('submitBtn');
+	
+	// Results screen elements
+	const resultsTableBody = document.getElementById('resultsTableBody');
+	const answerKeyContainer = document.getElementById('answerKeyContainer');
+	const winnerAnnouncement = document.getElementById('winnerAnnouncement');
+	const winnerName = document.getElementById('winnerName');
+	const playAgainBtn = document.getElementById('playAgainBtn');
+	
+	// Modal elements
+	const instructionsBtn = document.getElementById('instructionsBtn');
+	const closeInstructionsBtn = document.getElementById('closeInstructionsBtn');
+	const gotItBtn = document.getElementById('gotItBtn');
+	const feedbackContent = document.getElementById('feedbackContent');
+	const nextReviewBtn = document.getElementById('nextReviewBtn');
+	const resetBtn = document.getElementById('resetBtn');
+	
+	// Initialize the game
+	function init() {
+	totalReviews.textContent = reviews.length;
+	
+	// Set up event listeners
+	teamBtns.forEach(btn => {
+	btn.addEventListener('click', () => selectTeamCount(btn));
+	});
+	
+	timeBtns.forEach(btn => {
+	btn.addEventListener('click', () => selectTime(btn));
+	});
+	
+	startGameBtn.addEventListener('click', startGame);
+	submitBtn.addEventListener('click', submitAnswer);
+	playAgainBtn.addEventListener('click', resetGame);
+	resetBtn.addEventListener('click', resetGame);
+	
+	instructionsBtn.addEventListener('click', showInstructions);
+	closeInstructionsBtn.addEventListener('click', hideInstructions);
+	gotItBtn.addEventListener('click', hideInstructions);
+	nextReviewBtn.addEventListener('click', nextReview);
+	
+	choiceButtons.forEach(btn => {
+	btn.addEventListener('click', () => selectChoice(btn));
+	});
+	}
+	
+	// Select number of teams
+	function selectTeamCount(btn) {
+	teamBtns.forEach(b => b.classList.remove('ta-green', 'text-white'));
+	btn.classList.add('ta-green', 'text-white');
+	
+	const numTeams = parseInt(btn.dataset.teams);
+	teamInputs.innerHTML = '';
+	
+	for (let i = 1; i <= numTeams; i++) {
+	const input = document.createElement('div');
+	input.innerHTML = `
+	<input type="text" class="team-name-input w-full border-2 border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" 
+	placeholder="Team ${i} Name" value="Team ${i}">
+	`;
+	teamInputs.appendChild(input);
+	}
+	
+	teamNamesContainer.classList.remove('hidden');
+	checkStartGameButton();
+	}
+	
+	// Select time per review
+	function selectTime(btn) {
+	timeBtns.forEach(b => b.classList.remove('ta-green', 'text-white'));
+	btn.classList.add('ta-green', 'text-white');
+	
+	gameState.timePerReview = parseInt(btn.dataset.time);
+	checkStartGameButton();
+	}
+	
+	// Check if we can enable the start game button
+	function checkStartGameButton() {
+	const teamInputs = document.querySelectorAll('.team-name-input');
+	const hasTeams = teamInputs.length > 0;
+	const hasTime = gameState.timePerReview > 0;
+	
+	startGameBtn.disabled = !(hasTeams && hasTime);
+	}
+	
+	// Start the game
+	function startGame() {
+	// Get team names
+	const teamInputs = document.querySelectorAll('.team-name-input');
+	gameState.teams = Array.from(teamInputs).map(input => {
+	return {
+	name: input.value || input.placeholder,
+	score: 0,
+	correct: 0,
+	incorrect: 0,
+	answers: []
+	};
+	});
+	
+	// Initialize game state
+	gameState.currentReviewIndex = 0;
+	gameState.currentTeamIndex = 0;
+	
+	// Show game screen
+	setupScreen.classList.add('hidden');
+	gameScreen.classList.remove('hidden');
+	
+	// Load first review
+	loadReview();
+	}
+	
+	// Load the current review
+	function loadReview() {
+	const review = reviews[gameState.currentReviewIndex];
+	
+	// Update UI
+	currentReviewNum.textContent = gameState.currentReviewIndex + 1;
+	reviewText.textContent = review.text;
+	reviewIcon.textContent = review.icon;
+	
+	// Update stars
+	let starsHTML = '';
+	for (let i = 0; i < 5; i++) {
+	starsHTML += i < review.stars ? '★' : '☆';
+	}
+	reviewStars.innerHTML = starsHTML;
+	
+	// Update team name
+	currentTeamName.textContent = gameState.teams[gameState.currentTeamIndex].name;
+	
+	// Reset choices and reasoning
+	choiceButtons.forEach(btn => btn.classList.remove('selected'));
+	reasoningInput.value = '';
+	gameState.selectedChoice = null;
+	
+	// Start timer
+	startTimer();
+	}
+	
+	// Start the timer
+	function startTimer() {
+	// Clear any existing timer
+	if (gameState.timer) {
+	clearInterval(gameState.timer);
+	}
+	
+	// Set initial time
+	gameState.timeRemaining = gameState.timePerReview;
+	updateTimerDisplay();
+	
+	// Start the timer
+	gameState.timer = setInterval(() => {
+	gameState.timeRemaining--;
+	updateTimerDisplay();
+	
+	if (gameState.timeRemaining <= 0) {
+	clearInterval(gameState.timer);
+	submitAnswer(true); // Auto-submit when time runs out
+	}
+	}, 1000);
+	}
+	
+	// Update the timer display
+	function updateTimerDisplay() {
+	const minutes = Math.floor(gameState.timeRemaining / 60);
+	const seconds = gameState.timeRemaining % 60;
+	timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+	
+	// Update timer bar
+	const percentage = (gameState.timeRemaining / gameState.timePerReview) * 100;
+	timerBar.style.width = `${percentage}%`;
+	
+	// Change color based on time remaining
+	if (percentage < 25) {
+	timerBar.classList.remove('ta-green', 'bg-yellow-500');
+	timerBar.classList.add('bg-red-500');
+	} else if (percentage < 50) {
+	timerBar.classList.remove('ta-green', 'bg-red-500');
+	timerBar.classList.add('bg-yellow-500');
+	} else {
+	timerBar.classList.remove('bg-yellow-500', 'bg-red-500');
+	timerBar.classList.add('ta-green');
+	}
+	}
+	
+	// Select a choice (trustworthy or not)
+	function selectChoice(btn) {
+	choiceButtons.forEach(b => b.classList.remove('selected'));
+	btn.classList.add('selected');
+	
+	gameState.selectedChoice = btn.classList.contains('btn-trustworthy');
+	}
+	
+	// Submit an answer
+	function submitAnswer(timeOut = false) {
+	// Stop the timer
+	clearInterval(gameState.timer);
+	
+	const currentReview = reviews[gameState.currentReviewIndex];
+	const currentTeam = gameState.teams[gameState.currentTeamIndex];
+	
+	// If time ran out and no choice was made
+	if (timeOut && gameState.selectedChoice === null) {
+	gameState.selectedChoice = false; // Default to "Not Trustworthy" if time runs out
+	}
+	
+	// Calculate score
+	let pointsEarned = 0;
+	let isCorrect = false;
+	
+	if (gameState.selectedChoice === currentReview.isTrustworthy) {
+	pointsEarned += 2;
+	isCorrect = true;
+	currentTeam.correct++;
+	} else {
+	currentTeam.incorrect++;
+	}
+	
+	// Check reasoning (simple check for now - just if they provided something)
+	const hasReasoning = reasoningInput.value.trim().length > 0;
+	if (hasReasoning && isCorrect) {
+	pointsEarned += 1;
+	}
+	
+	// Update team score
+	currentTeam.score += pointsEarned;
+	
+	// Save the answer
+	currentTeam.answers.push({
+	reviewIndex: gameState.currentReviewIndex,
+	choice: gameState.selectedChoice,
+	reasoning: reasoningInput.value.trim(),
+	isCorrect: isCorrect,
+	pointsEarned: pointsEarned
+	});
+	
+	// Show feedback without revealing the answer
+	showFeedback(pointsEarned, currentTeam.name);
+	}
+	
+	// Show feedback after an answer (without revealing if it was correct)
+	function showFeedback(pointsEarned, teamName) {
+	let feedbackHTML = `
+	<div class="text-3xl mb-3">🎯</div>
+	<h3 class="text-xl font-bold ta-green-text mb-2">Answer Recorded</h3>
+	<p class="mb-4">${teamName} earned ${pointsEarned} points.</p>
+	<p>The correct answer will be revealed at the end of the game.</p>
+	`;
+	
+	feedbackContent.innerHTML = feedbackHTML;
+	feedbackModal.classList.remove('hidden');
+	}
+	
+	// Move to the next review
+	function nextReview() {
+	feedbackModal.classList.add('hidden');
+	
+	// Move to next team
+	gameState.currentTeamIndex = (gameState.currentTeamIndex + 1) % gameState.teams.length;
+	
+	// If we've gone through all teams, move to next review
+	if (gameState.currentTeamIndex === 0) {
+	gameState.currentReviewIndex++;
+	}
+	
+	// Check if game is over
+	if (gameState.currentReviewIndex >= reviews.length) {
+	showResults();
+	} else {
+	loadReview();
+	}
+	}
+	
+	// Show the results screen
+	function showResults() {
+	gameScreen.classList.add('hidden');
+	resultsScreen.classList.remove('hidden');
+	
+	// Sort teams by score
+	const sortedTeams = [...gameState.teams].sort((a, b) => b.score - a.score);
+	
+	// Populate results table
+	resultsTableBody.innerHTML = '';
+	sortedTeams.forEach(team => {
+	const row = document.createElement('tr');
+	row.innerHTML = `
+	<td class="py-3 px-4 border-b">${team.name}</td>
+	<td class="py-3 px-4 border-b text-center font-bold">${team.score}</td>
+	<td class="py-3 px-4 border-b text-center text-green-600">${team.correct}</td>
+	<td class="py-3 px-4 border-b text-center text-red-600">${team.incorrect}</td>
+	`;
+	resultsTableBody.appendChild(row);
+	});
+	
+	// Show winner
+	if (sortedTeams.length > 1 && sortedTeams[0].score > sortedTeams[1].score) {
+	winnerName.textContent = sortedTeams[0].name;
+	winnerAnnouncement.classList.remove('hidden');
+	createConfetti();
+	} else if (sortedTeams.length > 1 && sortedTeams[0].score === sortedTeams[1].score) {
+	winnerAnnouncement.classList.add('hidden');
+	}
+	
+	// Populate answer key
+	answerKeyContainer.innerHTML = '';
+	reviews.forEach((review, index) => {
+	const answerDiv = document.createElement('div');
+	answerDiv.className = 'p-4 border rounded-lg';
+	
+	let starsHTML = '';
+	for (let i = 0; i < 5; i++) {
+	starsHTML += i < review.stars ? '★' : '☆';
+	}
+	
+	answerDiv.innerHTML = `
+	<div class="flex items-center justify-between mb-2">
+	<div class="flex items-center">
+	<span class="mr-2">${review.icon}</span>
+	<span class="text-yellow-400">${starsHTML}</span>
+	</div>
+	<span class="${review.isTrustworthy ? 'text-green-600' : 'text-red-600'} font-bold">
+	${review.isTrustworthy ? '✅ Trustworthy' : '❌ Not Trustworthy'}
+	</span>
+	</div>
+	<p class="text-gray-700 mb-2">"${review.text}"</p>
+	<p class="text-sm text-gray-600"><strong>Why:</strong> ${review.reasoning}</p>
+	`;
+	
+	answerKeyContainer.appendChild(answerDiv);
+	});
+	}
+	
+	// Create confetti effect for winner
+	function createConfetti() {
+	const confettiContainer = document.getElementById('confettiContainer');
+	const colors = ['#00aa6c', '#34e0a1', '#2c2c2c', '#f2f2f2', '#ffdd00', '#ff5d5d'];
+	
+	for (let i = 0; i < 100; i++) {
+	const confetti = document.createElement('div');
+	confetti.className = 'confetti';
+	confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+	confetti.style.left = `${Math.random() * 100}%`;
+	confetti.style.animationDelay = `${Math.random() * 3}s`;
+	confettiContainer.appendChild(confetti);
+	}
+	}
+	
+	// Show instructions modal
+	function showInstructions() {
+	instructionsModal.classList.remove('hidden');
+	}
+	
+	// Hide instructions modal
+	function hideInstructions() {
+	instructionsModal.classList.add('hidden');
+	}
+	
+	// Reset the game
+	function resetGame() {
+	// Reset game state
+	gameState = {
+	teams: [],
+	currentReviewIndex: 0,
+	currentTeamIndex: 0,
+	timePerReview: 120,
+	timer: null,
+	timeRemaining: 0,
+	selectedChoice: null
+	};
+	
+	// Reset UI
+	teamBtns.forEach(btn => btn.classList.remove('ta-green', 'text-white'));
+	timeBtns.forEach(btn => btn.classList.remove('ta-green', 'text-white'));
+	teamNamesContainer.classList.add('hidden');
+	teamInputs.innerHTML = '';
+	startGameBtn.disabled = true;
+	
+	// Show setup screen
+	resultsScreen.classList.add('hidden');
+	gameScreen.classList.add('hidden');
+	setupScreen.classList.remove('hidden');
+	}
+	
+	// Initialize the game
+	init();
+	</script>
+	<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'951b188982a44284',t:'MTc1MDI1Mjk1MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+	</html>
+	
+
